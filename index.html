@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Automation Hub & Community</title>
+    <style>
+        :root {
+            --primary: #ff0000;
+            --primary-hover: #cc0000;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --log-bg: #090d16;
+            --log-text: #38bdf8;
+            --accent-discord: #5865F2;
+            --accent-telegram: #2AABEE;
+            --accent-youtube: #FF0000;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+        .dashboard-card {
+            width: 100%;
+            max-width: 750px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header-title { display: flex; align-items: center; gap: 12px; }
+        .header h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+        .logo-icon { color: var(--primary); font-size: 26px; }
+        .status-badge {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+        .description {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        .social-links-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .social-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn-yt { background-color: var(--accent-youtube); }
+        .btn-discord { background-color: var(--accent-discord); }
+        .btn-telegram { background-color: var(--accent-telegram); }
+        .form-group { margin-bottom: 20px; }
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 14px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.2);
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s, transform 0.1s;
+            animation: pulseGlow 3s infinite;
+        }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; animation: none; }
+        .console-box { margin-top: 25px; }
+        .console-header {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        #log {
+            background: var(--log-bg);
+            color: var(--log-text);
+            padding: 16px;
+            border-radius: 8px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            border: 1px solid var(--border-color);
+        }
+        .log-line { word-break: break-word; }
+        @media(max-width: 600px) {
+            .social-links-grid { grid-template-columns: 1fr; }
+            .dashboard-card { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-card">
+        <div class="header">
+            <div class="header-title">
+                <span class="logo-icon">▶</span>
+                <h2>YouTube Automation Hub</h2>
+            </div>
+            <div class="status-badge">System Ready</div>
+        </div>
+
+        <p class="description">
+            Connect your YouTube channel to automatically send custom "Thanks" replies to new comments on your videos, shorts and live streams. Explore our official channels and community links below.
+        </p>
+
+        <div class="social-links-grid">
+            <a href="https://youtube.com/@vedanshsrivastava182?si=2bbBaDrP0RfJfa45" target="_blank" rel="noopener" class="social-btn btn-yt"><span>YouTube Channel</span></a>
+            <a href="https://discord.gg/TGpDsyVpU" target="_blank" rel="noopener" class="social-btn btn-discord"><span>Discord Server</span></a>
+            <a href="https://t.me/+VIG47x9kaJYyODE9" target="_blank" rel="noopener" class="social-btn btn-telegram"><span>Telegram Community</span></a>
+        </div>
+
+        <div class="form-group">
+            <label for="clientIdInput">Google OAuth Client ID</label>
+            <input type="text" id="clientIdInput" placeholder="Enter your Google Cloud Client ID (e.g., xxx.apps.googleusercontent.com)">
+        </div>
+
+        <button id="connectBtn" class="btn-primary" onclick="handleAuthClick()">Connect Channel & Start Processing</button>
+
+        <div class="console-box">
+            <div class="console-header">
+                <span>Activity Logs</span>
+                <span>Live Feed</span>
+            </div>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <script>
+        // API key ki zarurat nahi: login ke baad access token se saare calls chalte hain.
+        const SCOPES = 'https://www.googleapis.com/auth/youtube.force-ssl';
+        const REPLY_TEXT = "Thanks for watching! ❤️";
+        const MAX_COMMENTS = 15;       // ek baar me kitne comments dekhne hain
+        const DELAY_MS = 2000;         // do replies ke beech gap (spam se bachne ke liye)
+        const REPLIED_KEY = 'repliedCommentIds';
+        const CLIENT_ID_KEY = 'savedClientId';
+        // Client ID secret nahi hoti, isliye code me rakhna safe hai.
+        const DEFAULT_CLIENT_ID = '211357673504-47di1ngjd1v3r95uqhqgl9mrh3v2v61m.apps.googleusercontent.com';
+
+        let tokenClient = null;
+        let accessToken = null;
+        let myChannelId = null;
+        let gapiReady = false;
+        let busy = false;
+
+        function logMessage(message) {
+            const logDiv = document.getElementById('log');
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.textContent = '> ' + message;   // textContent: commenter ka HTML run nahi hoga
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function errText(e) {
+            if (e && e.result && e.result.error && e.result.error.message) return e.result.error.message;
+            if (e && e.message) return e.message;
+            try { return JSON.stringify(e); } catch (_) { return String(e); }
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        function getReplied() {
+            try { return JSON.parse(localStorage.getItem(REPLIED_KEY) || '[]'); } catch (_) { return []; }
+        }
+        function saveReplied(list) {
+            try { localStorage.setItem(REPLIED_KEY, JSON.stringify(list.slice(-500))); } catch (_) {}
+        }
+
+        function gapiLoaded() {
+            gapi.load('client', initializeGapiClient);
+        }
+
+        async function initializeGapiClient() {
+            try {
+                await gapi.client.init({
+                    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"],
+                });
+                gapiReady = true;
+                logMessage("GAPI Client successfully initialized.");
+            } catch (err) {
+                logMessage("Initialization Error: " + errText(err));
+            }
+        }
+
+        function gisLoaded() { /* token client button click par banta hai */ }
+
+        function handleAuthClick() {
+            logMessage("Button clicked...");
+            const clientId = document.getElementById('clientIdInput').value.trim().replace(/^https?:\/\//, '');
+            if (!clientId) {
+                alert("Please enter your Google OAuth Client ID first.");
+                return;
+            }
+            if (!clientId.endsWith('.apps.googleusercontent.com')) {
+                logMessage("Client ID galat lag rahi hai. Ye '.apps.googleusercontent.com' pe khatam honi chahiye.");
+                return;
+            }
+            try { localStorage.setItem(CLIENT_ID_KEY, clientId); } catch (_) {}
+            if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+                logMessage("Google login script load nahi hui. Page refresh karo aur internet check karo.");
+                return;
+            }
+            if (!gapiReady) {
+                logMessage("YouTube API abhi load ho rahi hai. Kuch second baad dobara dabao.");
+                return;
+            }
+            try {
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: clientId,
+                    scope: SCOPES,
+                    callback: (resp) => {
+                        if (resp.error !== undefined) {
+                            logMessage("Authentication Error: " + resp.error);
+                            return;
+                        }
+                        accessToken = resp.access_token;
+                        gapi.client.setToken({ access_token: accessToken });
+                        logMessage("Authentication successful!");
+                        fetchAndProcessComments();
+                    },
+                    error_callback: (err) => {
+                        logMessage("Popup Error: " + (err && err.type ? err.type : JSON.stringify(err)));
+                        if (err && err.type === 'popup_failed_to_open') {
+                            logMessage("Browser me is site ke liye pop-ups Allow karo, phir dobara try karo.");
+                        }
+                    }
+                });
+                tokenClient.requestAccessToken({ prompt: '' });
+            } catch (e) {
+                logMessage("Error: " + errText(e));
+            }
+        }
+
+        async function fetchAndProcessComments() {
+            if (busy) { logMessage("Processing pehle se chal rahi hai."); return; }
+            busy = true;
+            document.getElementById('connectBtn').disabled = true;
+            try {
+                // 1. Apne channel ki ID nikalo
+                const ch = await gapi.client.youtube.channels.list({ part: "id,snippet", mine: true });
+                if (!ch.result.items || ch.result.items.length === 0) {
+                    logMessage("Is Google account par koi YouTube channel nahi mila.");
+                    return;
+                }
+                myChannelId = ch.result.items[0].id;
+                logMessage("Channel connected: " + ch.result.items[0].snippet.title);
+
+                // 2. Recent comments lao
+                const response = await gapi.client.youtube.commentThreads.list({
+                    part: "snippet,replies",
+                    allThreadsRelatedToChannelId: myChannelId,
+                    order: "time",
+                    maxResults: MAX_COMMENTS
+                });
+
+                const items = response.result.items;
+                if (!items || items.length === 0) {
+                    logMessage("No new comments found to process.");
+                    return;
+                }
+                logMessage("Found " + items.length + " recent comment thread(s). Processing...");
+
+                const replied = getReplied();
+                let sent = 0, skipped = 0;
+
+                for (const item of items) {
+                    const top = item.snippet.topLevelComment;
+                    const commentId = top.id;
+                    const author = top.snippet.authorDisplayName;
+                    const authorChannel = top.snippet.authorChannelId ? top.snippet.authorChannelId.value : null;
+
+                    // Skip: apna comment
+                    if (authorChannel === myChannelId) { skipped++; continue; }
+                    // Skip: pehle reply de chuke (is browser me)
+                    if (replied.includes(commentId)) { skipped++; continue; }
+                    // Skip: channel owner already reply kar chuka hai
+                    const alreadyReplied = item.replies && item.replies.comments &&
+                        item.replies.comments.some(c => c.snippet.authorChannelId && c.snippet.authorChannelId.value === myChannelId);
+                    if (alreadyReplied) { skipped++; replied.push(commentId); continue; }
+
+                    logMessage("[Comment] " + author + ": " + String(top.snippet.textOriginal || '').slice(0, 80));
+
+                    const ok = await replyToComment(commentId, REPLY_TEXT);
+                    if (ok) {
+                        replied.push(commentId);
+                        saveReplied(replied);
+                        sent++;
+                        await sleep(DELAY_MS);
+                    }
+                }
+                saveReplied(replied);
+                logMessage("Done. Replies sent: " + sent + ", skipped: " + skipped + ".");
+            } catch (err) {
+                logMessage("API Error: " + errText(err));
+            } finally {
+                busy = false;
+                document.getElementById('connectBtn').disabled = false;
+            }
+        }
+
+        async function replyToComment(parentId, text) {
+            try {
+                await gapi.client.youtube.comments.insert({
+                    part: "snippet",
+                    resource: { snippet: { parentId: parentId, textOriginal: text } }
+                });
+                logMessage("  ↳ Reply sent: " + text);
+                return true;
+            } catch (e) {
+                logMessage("  ↳ Failed to send reply: " + errText(e));
+                return false;
+            }
+        }
+
+        // Page load par pehla log + saved Client ID wapas bharo
+        logMessage("System initialized successfully. Awaiting authentication...");
+        try {
+            const saved = localStorage.getItem(CLIENT_ID_KEY);
+            document.getElementById('clientIdInput').value = saved || DEFAULT_CLIENT_ID;
+        } catch (_) {
+            document.getElementById('clientIdInput').value = DEFAULT_CLIENT_ID;
+        }
+        logMessage("Client ID pehle se bhari hui hai. Seedha button dabao.");
+    </script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/js/gsi/client" onload="gisLoaded()"></script>
+</body>
+</html>
